@@ -1,19 +1,30 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
-
-trigger:
-- main
-
 pool:
-  vmImage: ubuntu-latest
+  vmImage: ubuntu-20.04
 
-steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
+stages:
+- stage: continuous_integration
+  displayName: Continuous Integration
+  jobs:
+  - job: framework
+    displayName: Framework
+    container: mcr.microsoft.com/dotnet/sdk:6.0
+    steps:
+    - script: dotnet --version
+      displayName: Check .NET SDK version
 
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+  - job: restore
+    displayName: Restore NuGet packages
+    dependsOn: framework
+    container: mcr.microsoft.com/dotnet/sdk:6.0
+    steps:
+    - script: dotnet restore
+
+  - job: build
+    displayName: Build and Run
+    dependsOn: restore
+    container: mcr.microsoft.com/dotnet/sdk:6.0
+    steps:
+    - script: dotnet framework
+      displayName: Framework .NET project
+    - script: dotnet run
+      displayName: Run .NET application
